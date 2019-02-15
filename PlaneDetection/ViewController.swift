@@ -16,27 +16,17 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // Set the view's delegate
         sceneView.delegate = self
-        
-        // Show statistics such as fps and timing information
         sceneView.showsStatistics = true
-        
-        // Create a new scene
         let scene = SCNScene(named: "art.scnassets/ship.scn")!
-        
-        // Set the scene to the view
         sceneView.scene = scene
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        // Create a session configuration
         let configuration = ARWorldTrackingConfiguration()
-
-        // Run the view's session
+        configuration.planeDetection = [.horizontal, .vertical]
         sceneView.session.run(configuration)
     }
     
@@ -49,6 +39,34 @@ class ViewController: UIViewController, ARSCNViewDelegate {
 
     // MARK: - ARSCNViewDelegate
     
+    func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
+      //  let torus = SCNTorus(ringRadius: 0.15, pipeRadius: 0.02)
+        //        torus.firstMaterial?.diffuse.contents = UIColor.blue.withAlphaComponent(0.9)
+        //        node.geometry = torus
+        guard  let planeAnchor = anchor as? ARPlaneAnchor else {
+            return
+        }
+        let extend = planeAnchor.extent
+        
+        let plane = SCNPlane(width: CGFloat(extend.x), height: CGFloat(extend.z))
+            let planeNode = SCNNode(geometry: plane)
+        planeNode.eulerAngles.x = -.pi/2
+        planeNode.name = "arPlane"
+     
+        let anchoreNode = SCNScene(named: "art.scnassets/ship.scn")!.rootNode
+        node.addChildNode(anchoreNode)
+    }
+    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
+        guard let planeAnchore = anchor as? ARPlaneAnchor else {
+            return}
+        let extend = planeAnchore.extent
+        let planeGeomatery = SCNPlane(width: CGFloat(extend.x), height: CGFloat(extend.z))
+        planeGeomatery.firstMaterial?.diffuse.contents = UIColor.blue
+        let planeNode = node.childNode(withName: "arPlane", recursively: false)
+        
+        planeNode?.geometry = planeGeomatery 
+        
+    }
 /*
     // Override to create and configure nodes for anchors added to the view's session.
     func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
